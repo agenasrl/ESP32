@@ -27,13 +27,19 @@ void app_main(void)
     led_strip_handle_t led_strip;
     ESP_ERROR_CHECK(led_strip_new_rmt_device(&strip_config, &rmt_config, &led_strip));
 
-    // Turn the LED on: white at low brightness (R, G, B all set)
-    ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, 0, 20, 20, 20));
-    ESP_ERROR_CHECK(led_strip_refresh(led_strip));
-
-    ESP_LOGI(TAG, "RGB LED on GPIO%d turned on", RGB_LED_GPIO);
+    ESP_LOGI(TAG, "RGB LED on GPIO%d ready, cycling red/green/blue", RGB_LED_GPIO);
 
     while (1) {
+        ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, 0, 20, 0, 0));
+        ESP_ERROR_CHECK(led_strip_refresh(led_strip));
+        vTaskDelay(pdMS_TO_TICKS(1000));
+
+        ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, 0, 0, 20, 0));
+        ESP_ERROR_CHECK(led_strip_refresh(led_strip));
+        vTaskDelay(pdMS_TO_TICKS(1000));
+
+        ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, 0, 0, 0, 20));
+        ESP_ERROR_CHECK(led_strip_refresh(led_strip));
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }

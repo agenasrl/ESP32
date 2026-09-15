@@ -1,11 +1,11 @@
-# ESP32-C5-MINI-1 — RGB LED (WS2812B)
+# ESP32-C3-MINI-1 — RGB LED (WS2812B)
 
 ESP-IDF project that turns on an XL-5050RGBC-WS2812B addressable RGB LED
-connected to **GPIO8** of an **ESP32-C5-MINI-1** module.
+connected to **GPIO8** of an **ESP32-C3-MINI-1** module.
 
 ## Hardware
 
-- Board/module: ESP32-C5-MINI-1
+- Board/module: ESP32-C3-MINI-1
 - LED: XL-5050RGBC-WS2812B (WS2812B-compatible, single-wire data protocol)
 - Wiring:
   - LED `DIN` → GPIO8
@@ -20,13 +20,12 @@ The LED is driven over the RMT peripheral using Espressif's managed
 ## Prerequisites
 
 1. Visual Studio Code with the **Espressif IDF** extension installed.
-2. ESP-IDF **v5.3 or newer** installed via the extension's setup wizard
-   (required for ESP32-C5 target support).
+2. ESP-IDF **v5.0 or newer** installed via the extension's setup wizard.
 
 ## Opening the project
 
 1. Open this folder in VS Code (`File > Open Folder...`).
-2. Run **ESP-IDF: Set Espressif Target** and choose `esp32c5`.
+2. Run **ESP-IDF: Set Espressif Target** and choose `esp32c3`.
 3. Run **ESP-IDF: Select Port to Use** and pick the serial port your
    board enumerates as.
 4. Run **ESP-IDF: Build your Project** (this also fetches the
@@ -38,7 +37,7 @@ The LED is driven over the RMT peripheral using Espressif's managed
 
 ```sh
 . $IDF_PATH/export.sh
-idf.py set-target esp32c5
+idf.py set-target esp32c3
 idf.py build
 idf.py -p /dev/ttyUSB0 flash monitor
 ```

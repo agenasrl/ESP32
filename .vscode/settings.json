@@ -1,5 +1,5 @@
 {
-    "idf.adapterTargetName": "esp32c5",
+    "idf.adapterTargetName": "esp32c3",
     "idf.flashType": "UART",
     "C_Cpp.intelliSenseEngine": "Tag Parser",
     "files.associations": {

@@ -14,7 +14,7 @@ void app_main(void)
         .strip_gpio_num = RGB_LED_GPIO,
         .max_leds = RGB_LED_NUM_PIXELS,
         .led_model = LED_MODEL_WS2812,
-        .color_component_format = LED_STRIP_COLOR_COMPONENT_FMT_GRB,
+        .led_pixel_format = LED_PIXEL_FORMAT_GRB,
         .flags.invert_out = false,
     };
 

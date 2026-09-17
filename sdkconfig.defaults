@@ -1,0 +1,16 @@
+# Target: ESP32-WROOM-32E
+CONFIG_IDF_TARGET="esp32"
+
+# --- Bluetooth: NimBLE host (matches the Arduino BLEDevice/BLEServer/BLECharacteristic
+#     API surface used by the original sketch, ported here via h2zero/esp-nimble-cpp) ---
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+
+# This firmware only ever acts as a single-peripheral BLE GATT server advertising
+# to one phone app, so the central/observer roles are disabled to save flash/RAM.
+CONFIG_BT_NIMBLE_ROLE_CENTRAL=n
+CONFIG_BT_NIMBLE_ROLE_OBSERVER=n
+CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y
+CONFIG_BT_NIMBLE_ROLE_BROADCASTER=y
+CONFIG_BT_NIMBLE_MAX_CONNECTIONS=1
+CONFIG_BT_NIMBLE_MAX_BONDS=1

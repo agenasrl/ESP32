@@ -11,7 +11,7 @@
  *       -> h2zero/esp-nimble-cpp (NimBLEDevice/NimBLEServer/NimBLECharacteristic)
  *          CCCD (0x2902) descriptors are created automatically for
  *          NOTIFY/INDICATE characteristics, so no BLE2902 equivalent is needed.
- *   HardwareSerial SerTED(2)  -> driver/uart.h on UART_NUM_2 (same TX=17, RX=16 pins)
+ *   HardwareSerial SerTED(2)  -> driver/uart.h on UART_NUM_2 (RX=GPIO17, TX=GPIO16)
  *   EEPROM.read/write/commit  -> NVS (nvs_get_u8/nvs_set_u8/nvs_commit)
  *   setup()/loop()            -> app_main()
  *   delay()                   -> vTaskDelay(pdMS_TO_TICKS())
@@ -37,10 +37,17 @@ static const char *TAG = "tune_gateway";
 #define RECEIVE_INTERVAL   10u   /* ms, polling interval while reading from the ATmega */
 #define DEFAULT_WARM_UP    1
 
-/* UART link to the ATmega16M1 (was HardwareSerial SerTED(2) on the Arduino side) */
+/*
+ * UART link to the ATmega16M1 (was HardwareSerial SerTED(2) on the Arduino side).
+ *
+ * The original call was `SerTED.begin(9600, SERIAL_8N1, 17, 16);`. Despite its
+ * "tx-rx" comment, the Arduino-ESP32 HardwareSerial::begin() signature is
+ * (baud, config, rxPin, txPin), so the original firmware actually used
+ * RX = GPIO17, TX = GPIO16.
+ */
 #define ATMEGA_UART_PORT     UART_NUM_2
-#define ATMEGA_UART_TXD_PIN  17
-#define ATMEGA_UART_RXD_PIN  16
+#define ATMEGA_UART_TXD_PIN  16
+#define ATMEGA_UART_RXD_PIN  17
 #define ATMEGA_UART_BAUD     9600
 #define ATMEGA_UART_BUF_SIZE 256
 

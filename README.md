@@ -14,7 +14,7 @@ translated from the Arduino core to plain ESP-IDF:
 | Arduino (.ino)                                   | ESP-IDF (this project)                                   |
 |---------------------------------------------------|------------------------------------------------------------|
 | `BLEDevice`/`BLEServer`/`BLECharacteristic`/`BLE2902` (arduino-esp32 BLE lib) | [`h2zero/esp-nimble-cpp`](https://github.com/h2zero/esp-nimble-cpp) (`NimBLEDevice`/`NimBLEServer`/`NimBLECharacteristic`). CCCD (0x2902) descriptors are created automatically for `NOTIFY`/`INDICATE` characteristics, so no `BLE2902` equivalent is needed. |
-| `HardwareSerial SerTED(2)` (UART2, TX=17, RX=16)   | `driver/uart.h`, `UART_NUM_2` on the same GPIO17/GPIO16 pins |
+| `HardwareSerial SerTED(2)` (UART2, RX=17, TX=16)   | `driver/uart.h`, `UART_NUM_2` on the same GPIO17(RX)/GPIO16(TX) pins |
 | `EEPROM.read/write/commit`                         | NVS (`nvs_get_u8`/`nvs_set_u8`/`nvs_commit`)                |
 | `setup()` / `loop()`                                | `app_main()`                                                |
 | `delay(ms)`                                         | `vTaskDelay(pdMS_TO_TICKS(ms))`                             |
@@ -55,5 +55,5 @@ targets shown above).
 ## Hardware
 
 - Target: ESP32-WROOM-32E
-- UART2 to the ATmega16M1 tuning module: TX = GPIO17, RX = GPIO16, 9600 8N1
+- UART2 to the ATmega16M1 tuning module: RX = GPIO17, TX = GPIO16, 9600 8N1
 - BLE device name: `tune`

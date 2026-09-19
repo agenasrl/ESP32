@@ -16,7 +16,11 @@ import zipfile
 from collections import defaultdict
 from urllib.parse import urljoin, urlsplit
 
-HTML_EXTS = (".html", ".htm")
+HTML_EXTS = (".html", ".htm", ".php")
+# Extensions we always treat as pages; .php files are only treated as pages
+# when they actually contain an <html> tag (see is_page_file) so that PHP
+# library/include files (classes, snippets) don't get flagged as pages.
+ALWAYS_PAGE_EXTS = (".html", ".htm")
 
 
 class PageParser(html.parser.HTMLParser):
@@ -117,6 +121,20 @@ class PageParser(html.parser.HTMLParser):
             self.word_count += len(words)
 
 
+def is_page_file(path):
+    """.html/.htm are always pages; .php only counts as a page if it renders
+    a full HTML document (has an <html tag) rather than being a library/include
+    file (a PHP class, a snippet meant to be require()'d, etc.)."""
+    if path.lower().endswith(ALWAYS_PAGE_EXTS):
+        return True
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as fh:
+            head = fh.read(20000)
+    except OSError:
+        return False
+    return bool(re.search(r"<html[\s>]", head, re.IGNORECASE))
+
+
 def find_files(root, names):
     """Case-insensitive search for files by basename anywhere under root."""
     wanted = {n.lower() for n in names}
@@ -152,6 +170,8 @@ def resolve_internal_link(root, page_rel_path, href):
     href = href.strip()
     if not href or href.startswith(("#", "mailto:", "tel:", "javascript:")):
         return None
+    if "<?" in href:
+        return None  # PHP-templated href (e.g. "<?php echo $itemlink ?>") — not statically resolvable
     split = urlsplit(href)
     if split.scheme or split.netloc:
         return None  # absolute URL -> treat as external; we don't know the real domain
@@ -161,20 +181,39 @@ def resolve_internal_link(root, page_rel_path, href):
     return joined
 
 
+def collapse_wrapping_dir(tmp):
+    """Many exporters (and this skill's own zip -r) wrap everything in one
+    top-level folder (e.g. a date-stamped export dir). That folder is never
+    part of the site's real URL path, so treating it as the root would make
+    every sitemap/robots.txt comparison fail. Descend into it when it's the
+    only thing at the top level."""
+    root = tmp
+    while True:
+        entries = [e for e in os.listdir(root) if not e.startswith("__MACOSX")]
+        if len(entries) == 1 and os.path.isdir(os.path.join(root, entries[0])):
+            root = os.path.join(root, entries[0])
+        else:
+            return root
+
+
 def audit(zip_path, report_path):
-    with tempfile.TemporaryDirectory(prefix="seo-audit-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="seo-audit-") as extract_dir:
         with zipfile.ZipFile(zip_path) as zf:
-            zf.extractall(tmp)
+            zf.extractall(extract_dir)
+
+        tmp = collapse_wrapping_dir(extract_dir)
 
         html_files = []
         for dirpath, _dirs, files in os.walk(tmp):
             for f in files:
                 if f.lower().endswith(HTML_EXTS):
-                    html_files.append(os.path.join(dirpath, f))
+                    full = os.path.join(dirpath, f)
+                    if is_page_file(full):
+                        html_files.append(full)
         html_files.sort()
 
         if not html_files:
-            print(f"No .html/.htm files found inside {zip_path}", file=sys.stderr)
+            print(f"No page files (.html/.htm/.php with an <html> tag) found inside {zip_path}", file=sys.stderr)
             sys.exit(1)
 
         all_files_rel = set()
@@ -270,7 +309,8 @@ def audit(zip_path, report_path):
             if not p.jsonld_types:
                 page_issues.append("no JSON-LD structured data")
 
-            if inbound_links.get(rel) is None and rel not in ("index.html",) and not rel.endswith("/index.html"):
+            is_index_page = os.path.basename(rel).lower() in ("index.html", "index.htm", "index.php", "default.html", "default.php")
+            if inbound_links.get(rel) is None and not is_index_page:
                 if sitemap_urls and rel not in sitemap_paths_guess and not any(rel in u for u in sitemap_urls):
                     page_issues.append("orphan page: no internal links found and not in sitemap")
                 elif not sitemap_urls:
@@ -309,7 +349,11 @@ def audit(zip_path, report_path):
                 target = resolve_internal_link(tmp, rel, href)
                 if target is None:
                     continue
-                candidates = {target, target + "index.html", target.rstrip("/") + "/index.html"}
+                candidates = {target}
+                stripped = target.rstrip("/")
+                for index_name in ("index.html", "index.htm", "index.php"):
+                    candidates.add(target + index_name)
+                    candidates.add(stripped + "/" + index_name)
                 if not (candidates & all_files_rel):
                     broken.append((rel, href))
         for src, href in broken:
